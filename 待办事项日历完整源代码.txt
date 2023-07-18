@@ -1,0 +1,503 @@
+<html>
+<head>
+  <title>待办事项日历</title>
+
+  <!-- 引入CSS文件 -->
+  
+  <!-- 引入FullCalendar的样式表 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css">
+  <!-- 引入Flatpickr的样式表 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+  
+  <!-- 引入JavaScript库 -->
+  
+  <!-- 引入Moment.js库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+  <!-- 引入jQuery库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <!-- 引入FullCalendar库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
+  <!-- 引入Flatpickr库 -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <!-- 引入Vue.js库 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+
+  <!-- 样式 -->
+  <style>
+    /* 页面和标题的CSS样式 */
+    body {
+      font-family: Arial, sans-serif; /* 设置页面字体为Arial */
+      margin: 0;                      /* 去除页面外边距 */
+      padding: 20px;                  /* 设置页面内边距为20px */
+    }
+
+    h1 {
+      text-align: center;             /* 将标题居中对齐 */
+    }
+
+    /*工具栏中当前日期的字体设置 */
+	.fc-left {
+       font-weight: bold;           /* 设置当前日期的字体加粗 */
+       font-size: 1.5em;            /* 设置当前日期的字号为1.5em */
+    }
+
+	
+	/* 日历的CSS样式 */
+    #calendar {
+      width: 80vw;         /* 设置日历宽度为页面宽度的80% */
+      height: 60vh;        /* 设置日历高度为页面高度的60% */
+      margin: 0 auto;      /* 设置日历水平居中 */
+      position: relative;
+    }
+
+    /* 已完成任务的CSS样式（使用删除线） */
+    .completed {
+      text-decoration: line-through;     /* 添加删除线效果 */
+    }
+
+    /* 日历工具栏的CSS样式 */
+    .fc-toolbar {
+      position: relative;                /* 相对定位 */      
+    }
+
+    /* "添加待办事项"按钮容器的CSS样式 */
+    .add-todo-container {
+      position: relative;                /* 相对定位 */
+      top: 0;
+      right: 0;
+      margin: 10px;
+      display: flex;                    /* 使用弹性盒子布局 */
+      justify-content: flex-end;        /* 水平右对齐 */
+      align-items: center;              /* 垂直居中对齐 */
+    }
+
+    /* "添加待办事项"按钮的CSS样式 */
+    #addTodoButton {
+      background-color: green;      /* 背景颜色为绿色 */
+      color: white;                 /* 字体颜色为白色 */
+      border: none;                 /* 去除边框 */
+      padding: 10px 20px;           /* 内边距为10px上下，20px左右 */
+      font-size: 18px;              /* 字号为18px */
+      border-radius: 50%;           /* 圆角边框半径为50% */
+      cursor: pointer;              /* 鼠标指针样式为手型 */
+    }
+
+    /* "重置"按钮的CSS样式 */
+    #resetButton {
+      background-color: blue;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 18px;
+      border-radius: 50%;
+      cursor: pointer;
+      margin-right: 10px;           /* 右外边距为10px */
+    }
+
+    /* "添加待办事项"模态框的CSS样式 */
+    #todoModal {
+      display: none;                    /* 初始状态下隐藏 */
+      position: fixed;                  /* 固定定位 */
+      top: 50%;                         /* 距离顶部50% */
+      left: 50%;                        /* 距离左侧50% */
+      transform: translate(-50%, -50%); /* 水平垂直居中 */
+      background-color: #fff;           /* 背景颜色为白色 */
+      padding: 20px;                    /* 内边距为20px */
+      z-index: 9998;                    /* 层级为9998 */
+      border: 1px solid #ccc;           /* 边框为1px实线，颜色为灰色 */
+    }
+
+    /* "重置"模态框的CSS样式 */
+    #resetModal {
+      display: none;                 /* 初始状态下隐藏 */
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #fff;
+      padding: 20px;
+      z-index: 9998;
+      border: 1px solid #ccc;
+    }
+
+    /* "添加待办事项"模态框中文本输入框的CSS样式 */
+    #todoModal input[type="text"],
+    #todoModal input[type="time"] {
+      margin-bottom: 10px;    /* 底部外边距为10px */
+      width: 100%;            /* 宽度为100% */
+    }
+
+    /* 模态框中按钮的CSS样式 */
+    #todoModal button,
+    #resetModal button {
+      background-color: green;  /* 背景颜色为绿色 */
+      color: white;             /* 字体颜色为白色 */
+      border: none;             /* 去除边框 */
+      padding: 10px 20px;       /* 内边距为10px上下，20px左右 */
+      font-size: 16px;          /* 字号为16px */
+      cursor: pointer;          /* 鼠标指针样式为手型 */
+    }
+
+    /* HTML和body元素的CSS样式 */
+    html, body {
+      height: 100%;             /* 高度为100% */
+    }
+
+    /* 主容器的CSS样式 */
+    #container {
+      display: flex;            /* 使用弹性盒子布局 */
+      flex-direction: column;   /* 垂直布局 */
+      height: 100%;             /* 高度为100% */
+    }
+
+    /* 主容器中的日历的CSS样式 */
+    #calendar {
+      flex-grow: 1;             /* 自动填充剩余空间 */
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>待办事项日历</h1>  <!-- 标题 -->
+
+    <div id="calendar"></div>  <!-- 日历容器 -->
+
+    <div class="fc-toolbar">   <!-- 日历工具栏容器 -->
+      <div class="add-todo-container">   <!-- 添加待办事项按钮容器 -->
+         <button id="addTodoButton" @click="showTodoModal">+</button> <!-- 添加待办事项按钮，点击按钮显示添加待办事项的模态框 -->
+         <button id="resetButton" @click="showResetModal">-</button> <!-- 重置待办事项按钮，点击按钮显示重置待办事项的模态框 -->
+	  </div>
+    </div>
+
+    <div id="todoModal" v-show="showAddModal">  <!-- 添加待办事项的模态框 -->
+      <h2>添加待办事项</h2>  <!-- 模态框标题 -->
+      <div>
+        <label>待办日期:</label>
+        <input type="text" id="datePicker" v-model="date" readonly> <!-- 输入待办事项的日期 -->
+      </div>
+      <div>
+        <label>开始时间:</label>
+        <input type="text" id="startTimePicker" v-model="startTime" readonly> <!-- 输入待办事项的开始时间 -->
+      </div>
+      <div>
+        <label>结束时间:</label>
+        <input type="text" id="endTimePicker" v-model="endTime" readonly> <!-- 输入待办事项的结束时间 -->
+      </div>
+      <div>
+        <label>待办事项标题:</label>
+        <input type="text" v-model="title"> <!-- 输入待办事项的标题 -->
+      </div>
+      <div>
+        <button @click="addTodo" :disabled="!isValidInput">添加</button> <!-- 点击按钮执行添加待办事项的操作 -->
+        <button @click="cancelAdd">撤销</button> <!-- 点击按钮取消添加待办事项 -->
+      </div>
+    </div>
+
+    <div id="resetModal" v-show="showReset">  <!-- 重置待办事项的模态框 -->
+      <h2>重置待办事项</h2>     <!-- 模态框标题 -->
+      <div>
+        <label>选择日期:</label>
+        <input type="text" id="resetDatePicker" v-model="resetDate" readonly> <!-- 选择要重置待办事项的日期 -->
+      </div>
+      <div>
+        <button @click="resetTodos">确定</button> <!-- 点击按钮执行重置待办事项的操作 -->
+        <button @click="cancelReset">取消</button> <!-- 点击按钮取消重置待办事项 -->
+      </div>
+    </div>
+<script>
+    // 初始化FullCalendar
+    $(document).ready(function() {
+      $('#calendar').fullCalendar({
+        defaultView: 'month',  // 默认视图为月视图
+		header: {   //用于定义日历的头部工具栏，包括左侧、中间和右侧的元素或按钮。
+          left: 'custom', // 左侧工具栏元素，这里custom表示在左侧工具栏位置将显示自定义的内容或按钮。
+          center: '', // 日历标题
+          right: 'month,agendaWeek,agendaDay' // 右侧切换视图的按钮
+        },
+		titleFormat: '',  // 日历标题格式
+		editable: true,   // 可编辑日历
+        events: [],       // 用于存储待办事项的事件
+
+        // 双击事件时标记/取消标记已完成
+        eventClick: function(calEvent, jsEvent, view) {
+           if (jsEvent.detail === 2) { // 检查双击事件
+             if ($(this).hasClass('completed')) {
+            // 移除已完成样式和删除线
+                calEvent.completed = false;
+                $(this).removeClass('completed');
+             } else {
+            // 添加已完成样式和删除线
+              calEvent.completed = true;
+              $(this).addClass('completed');
+	               }
+          }
+        },
+        viewRender: function(view, element) {
+          var addTodoContainer = $('.add-todo-container'); // 获取"添加待办事项"容器
+          addTodoContainer.insertBefore($('.fc-right .fc-button-group')); // 将"添加待办事项"容器插入到左侧工具栏的 month 按钮前面
+		  
+		  var currentDate = moment().format('YYYY-MM-DD');
+          $('.fc-left').text(currentDate);     // 设置左侧工具栏显示当前日期
+		  
+        },
+        eventRender: function(event, element) {
+          var start = moment(event.start).format('HH:mm'); // 格式化事件的开始时间
+          var end = moment(event.end).format('HH:mm'); // 格式化事件的结束时间
+          element.find('.fc-time').remove(); // 移除事件元素中的时间显示
+          element.find('.fc-title').html(start + ' - ' + end + ': ' + event.title); // 在事件元素的标题中显示时间范围和标题
+
+          var currentDate = moment().format('YYYY-MM-DD'); // 获取当前日期
+          var isSameDay = moment(event.start).isSame(currentDate, 'day'); // 检查事件是否与当前日期是同一天
+
+          if (isSameDay && moment().isAfter(event.end, 'minute')) {
+            element.addClass('completed'); // 如果事件是同一天且当前时间晚于结束时间，则添加已完成样式
+          }
+        }
+      });
+      
+      // 检查待办事项函数，用于检查待办事项的状态
+      function checkTodos() {
+        var currentDate = moment().format('YYYY-MM-DD');  // 获取当前日期
+        var currentTime = moment().format('HH:mm');       // 获取当前时间
+
+        var currentEvents = $('#calendar').fullCalendar('clientEvents', function(event) {
+          return moment(event.start).format('YYYY-MM-DD') === currentDate; // 返回与当前日期相同的事件
+        });
+
+        currentEvents.forEach(function(event) {
+          var eventEnd = moment(event.end).format('HH:mm'); // 获取事件的结束时间
+          if (eventEnd <= currentTime) {                // 检查事件是否已过期
+            event.completed = true;                     // 标记事件已完成
+            $('#' + event._id).addClass('completed');   // 添加已完成样式
+          }
+        });
+      }
+
+      // 初始检查，在应用加载完成后，立即执行一次待办事项检查，即调用checkTodos函数。
+      checkTodos();
+
+      // 定点检查：使用setInterval函数，每半小时和整点执行检查，确保待办事项状态及时更新。
+      setInterval(function() {
+        var minutes = moment().format('mm');          // 获取当前分钟数
+        if (minutes === '00' || minutes === '30') {   // 检查是否是整点或半小时，如果是，则调用checkTodos函数执行待办事项检查。
+          checkTodos();  // 执行待办事项检查
+        }
+      }, 60 * 1000 );     // 60 * 1000表示每分钟的毫秒数，用于设置定时任务的间隔。通过定时任务，每隔一分钟就会执行一次待办事项的检查操作。
+                          //如果去掉60 * 1000，即将定时任务的间隔设置为1，那么检查操作将会非常频繁，可能会对性能产生负面影响。
+    });
+</script>
+<script>
+    // Vue.js代码
+    var app = new Vue({
+      el: "#container", // Vue实例的挂载点
+
+      data: {  //是 Vue.js 实例中的一个选项，用于定义数据属性,使得数据的变化能够自动更新到视图中，并且视图中的用户交互操作也能更新数据
+        showAddModal: true, // 控制添加待办事项模态框的显示与隐藏,初始值为true
+        showReset: false, // 控制重置待办事项模态框的显示与隐藏,初始值为false
+        date: "", // 待办事项的日期,初始值为空字符串
+        startTime: "00:00", // 待办事项的开始时间,初始值为 "00:00"
+        endTime: "00:00", // 待办事项的结束时间,初始值为 "00:00"
+        title: "", // 待办事项的标题,初始值为空字符串
+        resetDate: "" // 待重置的日期,初始值为空字符串
+      },
+
+      computed: { //是 Vue.js 实例中的一个选项，用于定义计算属性.
+        isValidInput: function() {  //检查输入是否有效
+          return this.date && this.startTime && this.endTime && this.title; }
+		  //计算属性的值是根据 date、startTime、endTime 和 title 这四个数据属性的值动态计算得出的;
+		  //如果四个属性都有值（非空字符串），返回 true，表示输入有效；否则返回 false，表示输入无效。
+      },
+
+      methods: { //是 Vue.js 实例中的一个选项，用于定义方法.可以定义多个方法，每个方法都是一个函数，用于处理特定的逻辑或事件。
+        showTodoModal: function() { //此方法用于显示添加待办事项模态框。
+          this.showAddModal = true; // 数据属性的值设置为 true，以控制添加待办事项模态框的显示与隐藏
+          $('#todoModal').css('display', 'block'); // 使用 jQuery 修改模态框的显示样式，将其设置为可见（display: block）
+        },
+
+        showResetModal: function() { //该方法用于显示重置待办事项模态框
+          this.showReset = true; // 据属性的值设置为 true，以控制重置待办事项模态框的显示与隐藏
+          $('#resetModal').css('display', 'block'); // 使用 jQuery 修改模态框的显示样式，将其设置为可见（display: block）
+        },
+        //这两个方法可以通过在模板中绑定相应的事件来触发调用，例如通过点击按钮来调用 showTodoModal 或 showResetModal 方法，从而实现显示对应的模态框。
+		//这样，通过方法与数据属性的配合，可以控制模态框的显示状态，并进行相关的逻辑处理
+        
+		
+		addTodo: function() {
+          var start = moment(this.date + " " + this.startTime, "YYYY-MM-DD HH:mm"); // 构建待办事项的开始时间
+          var end = moment(this.date + " " + this.endTime, "YYYY-MM-DD HH:mm"); // 构建待办事项的结束时间
+          var eventTitle = this.title; // 获取待办事项的标题
+
+          var currentEvents = $('#calendar').fullCalendar('clientEvents', function(event) {
+            return moment(event.start).format('YYYY-MM-DD') === moment(start).format('YYYY-MM-DD');
+          }); // 获取指定日期的待办事项事件
+
+          if (currentEvents.length === 0) {      // 检查指定日期是否没有待办事项
+            if (moment(start).isSameOrBefore(moment(), 'minute')) {  // 检查开始时间是否早于或等于当前时间
+              alert("开始时间的值小于等于当前系统时间，请重新选择时间");
+              this.startTime = "00:00";   //将开始时间重置为00:00
+              this.endTime = "00:00";     //将结束时间重置为00:00
+              return;
+            }
+
+            if (moment(end).isSameOrBefore(start, 'minute')) {   // 检查结束时间是否早于或等于开始时间
+              alert("结束时间小于等于开始时间，请重新选择时间");
+              this.startTime = "00:00";
+              this.endTime = "00:00";
+              return;
+            }
+
+            if (moment(start).isAfter(moment()) && moment(end).isAfter(start)) { // 检查开始时间是否晚于当前时间且结束时间是否晚于开始时间
+              // 执行添加操作
+              var eventData = {
+                title: eventTitle,
+                start: start,
+                end: end,
+                allDay: false        //用于指示待办事项是否是全天事件,false表示不是全天事件
+              };
+			  //可以创建一个待办事项对象eventData，其中包含标题、开始时间、结束时间以及全天事件的信息。
+			  //这个对象可以用于后续的处理和操作，例如添加到日历或进行其他相关操作。
+
+              $('#calendar').fullCalendar('renderEvent', eventData); // 在日历中渲染待办事项事件
+
+              this.showAddModal = false; // 隐藏添加待办事项模态框
+              this.date = "";
+              this.startTime = "00:00";
+              this.endTime = "00:00";
+              this.title = "";
+              $('#todoModal').css('display', 'none'); // 修改模态框的显示样式
+            }
+          } else {  // 如果指定日期有待办事项
+            var lastEvent = currentEvents[currentEvents.length - 1];  // 获取最后一个待办事项
+            var lastEventEnd = moment(lastEvent.end);
+
+            if (moment(start).isSameOrBefore(lastEventEnd, "HH:mm")) { // 检查开始时间是否早于或等于上一个已添加待办事项的结束时间
+              alert("开始时间不能小于等于上一个已添加待办事项的结束时间，请重新选择时间");
+              this.startTime = "00:00";
+              this.endTime = "00:00";
+              return;
+            }
+
+            if (moment(end).isSameOrBefore(start, 'minute')) {  // 检查结束时间是否早于或等于开始时间
+              alert("结束时间小于等于开始时间，请重新选择时间");
+              this.startTime = "00:00";
+              this.endTime = "00:00";
+              return;
+            }
+
+            // 检查结束时间是否晚于开始时间且开始时间是否晚于上一个已添加待办事项的结束时间
+            if (moment(end).isAfter(start) && moment(start).isAfter(lastEventEnd)) { 
+              // 执行添加操作
+              var eventData = {
+                title: eventTitle,  // 待办事项的标题
+                start: start,       // 待办事项的开始时间
+                end: end,           // 待办事项的结束时间
+                allDay: false,      // 是否是全天事项
+                top: lastEvent.top + lastEvent.height + 5   //设置待办事项在日历中的垂直位置
+              };
+
+              $('#calendar').fullCalendar('renderEvent', eventData); // 在日历中渲染待办事项事件
+
+              this.showAddModal = false; // 隐藏添加待办事项模态框
+              this.date = "";            // 清空日期 
+              this.startTime = "00:00";  // 设置开始时间为默认值
+              this.endTime = "00:00";    // 设置结束时间为默认值
+              this.title = "";           // 清空标题
+              $('#todoModal').css('display', 'none'); // 修改模态框的显示样式
+            }
+          }
+        },
+
+        cancelAdd: function() {
+          this.showAddModal = false; // 隐藏添加待办事项模态框
+          this.date = "";
+          this.startTime = "00:00";
+          this.endTime = "00:00";
+          this.title = "";
+          $('#todoModal').css('display', 'none'); // 修改模态框的显示样式
+        },
+
+        
+		//重置待办事项函数：根据指定日期获取待重置的待办事项事件。
+		resetTodos: function() {
+          var events = $('#calendar').fullCalendar('clientEvents', function(event) {
+            return moment(event.start).format('YYYY-MM-DD') === moment(this.resetDate).format('YYYY-MM-DD');
+          }.bind(this)); // 获取待重置的日期的待办事项事件
+
+          
+		  
+		  if (events.length > 0) {   //如果存在待办事项事件
+            events.forEach(function(event) {
+              $('#calendar').fullCalendar('removeEvents', event._id); // 从日历中移除待办事项事件
+            });
+
+            this.showReset = false; // 隐藏重置待办事项模态框
+            this.resetDate = "";    // 清空重置日期
+            $('#resetModal').css('display', 'none'); // 修改模态框的显示样式为隐藏
+          } else {   //如果不存在待办事项事件，弹出警告提示框
+            alert("所选择日期内没有待办事项存在，请重新选择日期");
+          }
+        },
+
+        cancelReset: function() {  //此函数用于取消重置待办事项
+          this.showReset = false;  // 隐藏重置待办事项模态框
+          this.resetDate = "";     //设置为空字符串，即清空重置日期。
+          $('#resetModal').css('display', 'none'); // 使用 jQuery 将 #resetModal 元素的显示样式设置为隐藏
+        },
+
+        formatTime: function(event, field) { // 格式化输入的时间，确保始终显示为 HH:mm 格式
+          var value = event.target.value;    //从事件对象的目标值中获取输入的时间
+          if (value) {   //如果时间值存在
+            var formattedTime = moment(value, 'HH:mm').format('HH:mm'); //使用 Moment.js 库将时间值按照 "HH:mm" 格式进行格式化
+            this[field] = formattedTime;   // 将格式化后的时间值更新到指定的字段
+          }
+        }
+      },
+
+      mounted() { //是Vue组件生命周期钩子函数，在组件被挂载到DOM后执行。
+        flatpickr("#startTimePicker", {  //在mounted()函数内部，使用flatpickr库来初始化一个时间选择器.选择器的目标是id为startTimePicker的元素
+          enableTime: true, // 启用时间选择
+          noCalendar: true, // 不显示日历
+          dateFormat: "H:i", // 时间格式为小时:分钟
+          time_24hr: true, // 使用24小时制
+          onChange: //定义了一个 onChange 回调函数。当时间选择器的值发生变化时，该函数会被调用
+		            //它接受两个参数：selectedDates 表示选择的日期对象数组，dateStr 表示选择的日期字符串
+		     (selectedDates, dateStr) => {this.startTime = dateStr; } 
+		     // 将选择的日期字符串更新到组件的 startTime 属性中。
+        });
+
+        flatpickr("#endTimePicker", { //使用flatpickr库来初始化一个时间选择器.选择器的目标是id为endTimePicker的元素
+          enableTime: true,
+          noCalendar: true,
+          dateFormat: "H:i",
+          time_24hr: true,
+          onChange: (selectedDates, dateStr) => {
+            this.endTime = dateStr; // 将选择的日期字符串更新到组件的 endTime 属性中。
+          }
+        });
+
+        flatpickr("#datePicker", {
+          minDate: "today", // 设置最小可选择日期为当天
+          dateFormat: "Y-m-d", // 日期格式为年-月-日
+          defaultDate: "today", // 设置默认选中日期为当天
+          onChange: (selectedDates, dateStr) => {
+            this.date = dateStr; // 监听日期选择器的变化并更新date的值
+          }
+        });
+
+        flatpickr("#resetDatePicker", {
+          minDate: "today",
+          dateFormat: "Y-m-d",
+          defaultDate: "today",
+          onChange: (selectedDates, dateStr) => {
+            this.resetDate = dateStr; // 监听日期选择器的变化并更新resetDate的值
+          }
+        });
+
+        this.date = moment().format("YYYY-MM-DD"); // 将当前日期格式化为 "YYYY-MM-DD" 的字符串，并将其赋值给this.date(当前日期) 属性
+        this.resetDate = moment().format("YYYY-MM-DD"); // 将当前日期格式化为 "YYYY-MM-DD" 的字符串，并将其赋值给this.resetDate(重置日期) 属性
+      }
+    });
+  </script>
+</body>
+</html>
